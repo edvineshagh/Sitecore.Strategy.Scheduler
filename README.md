@@ -6,7 +6,7 @@ to this:
 
 	<agent interval="startTimeStamp|endTimeStamp|DaysOfWeek|durationOrTime" ... />  
 
-###Table of contents###
+### Table of contents ###
 
 1. [Motivation](#Motivation)
 2. [Installation](#Installation)
@@ -19,7 +19,7 @@ This contribution aims to address existing limitations of Sitecore scheduler, wh
 
 1. Unable to schedule activities to run at a specific time.  The  recommended workarounds are [not very elegant](https://sdn.sitecore.net/Forum/ShowPost.aspx?PostID=29010 "Publishing site at specific time").  Some of the suggestions include:
  
-	1.1. Create an agent with short sleep duration and manage execution time yourself.
+	1.1. Create an agent with short sleep duration and manage the execution time yourself.
 
 	1.2. Use windows scheduler
 
@@ -30,7 +30,7 @@ This contribution aims to address existing limitations of Sitecore scheduler, wh
 	1.4. Create Windows services
 
 	
-2. Agents defined for the scheduler do not have "finer" reoccurring interval; for example, run task every other weekday at 10:00 pm.  It is worth noting that can find a creative way to run a task by using a database command and [over write scheduler.LastRun in finally block](https://sitecorebasics.wordpress.com/2015/09/17/one-more-way-to-run-sitecore-scheduled-task-at-the-same-time-every-day/ "run task at specific time").
+2. Agents defined for the scheduler do not have "finer" reoccurring interval; for example, currently there is no way to run task every other weekday at 10:00 pm.  It is worth noting that there is a creative way to run a task by using a database command and [over write scheduler.LastRun in finally block](https://sitecorebasics.wordpress.com/2015/09/17/one-more-way-to-run-sitecore-scheduled-task-at-the-same-time-every-day/ "run a task at specific time").
 
 3. Agent execution times are not persisted; thus, agents are re-executed during worker process recycling.
 
@@ -38,12 +38,12 @@ Additionally, this contribution can lead to better system utilization because:
 
 1. Not every agent is evaluate for execution.
 
-	The existing scheduler loops through every agent and call respective Scheduler+Agent.IsDue() method to determine if the respective agent execute method should be called.
+	The existing scheduler loops through every agent and call respective Scheduler+Agent.IsDue() method to determine if the agent execute method should be called.
 	This contribution keeps track of agents next runtime in a heap (sorted list) and only calls agents whose runtime do not exceed the current timestamp.
 
 2. Scheduler sleeps for longer duration if possible.
 
-	The existing scheduler uses fixed-time-step sleep duration as specified by configuration file setting `/sitecore/scheduling/frequency`.  Therefore the scheduler thread wakes-up to re-evaluate agents IsDue() method even if there are no agents that need to be executed.  In contrast, this implementation uses variable-time-step duration, which is frequently seen in game and software simulation engines. With this approach, the scheduler keeps track of agent next runtime and sleep until the first agent that needs to be executed.  If the duration until next agent runtime is less than the scheduler configuration frequency, then configuration frequency is used to insure system is not overloaded by continual running agents and perserving existing sheduler behavior.
+	The existing scheduler uses fixed-time-step sleep duration as specified by the configuration file setting `/sitecore/scheduling/frequency`.  Therefore, the scheduler thread wakes-up to re-evaluate agents 'IsDue() method even if there are no agents that need to be executed.  In contrast, this implementation uses variable-time-step duration, which is frequently seen in game and software simulation engines. With this approach, the scheduler keeps track of agents' next runtime and sleeps until the first agent that needs to be executed.  If the duration until the next agent runtime is less than the scheduler configuration frequency, then the configuration frequency is used for the sleep time to insure that the system is not overloaded by continual running back-to-back scheduled agents; thereby, perserving existing sheduler behavior.
 
 3.  Control execution sequence 
 
@@ -51,7 +51,7 @@ Additionally, this contribution can lead to better system utilization because:
 
 
 # <a name="Installation"></a> 2. Installation #
-Install the distribution package from Sitecore Desktop Start->Development Tools->Installation Wizard.  Threre is no need to alter existing agent intervals. You can make use of the enhanced functionality, as needed, by simply changing your interval to desired schedule.
+Install the distribution package from Sitecore Desktop Start->Development Tools->Installation Wizard.  There is no need to alter existing agent intervals. You can make use of the enhanced functionality, as needed, by simply changing your interval to desired schedule.
 
 
 # <a name="Usage"></a> 3. Usage #
@@ -63,14 +63,14 @@ Below is an example of an agent declaration within a configuration [patch file](
 		   executionPriority="..." 
            interval="..." />
 
-## `name` attribute##
-The `name` attribute is a unique agent identifier.  If omitted, then the `type` is used as the agent identifier.  If multiple agents are defined with the same name, then a sequential numeric value is  appended to the name to insure a uniqueness.  This name is visible in `/Data/logs/SchedulerAgentsLastRun.log` file, which is used to keep track of last execution run time in the event the web worker process is recycled.  The log file path is configured in `Sitecore.Strategy.Schedulre.config` file under `scheduling/agentExecutionRepository`.
+## `name` attribute ##
+The `name` attribute is a unique agent identifier.  If omitted, then the `type` is used as the agent identifier.  If multiple agents are defined with the same name, then a sequential numeric value is  appended to the name to insure uniqueness.  This name is visible in the `/Data/logs/SchedulerAgentsLastRun.log` file, which is used to keep track of last execution run time in the event the web worker process is recycled.  The log file path is configured in `Sitecore.Strategy.Schedulre.config` file under `scheduling/agentExecutionRepository` node.
 
-## `type` and `method` attribute##
-The `type` attribute is the agent type that shall be used for schduler, and the `method` specifies the method name that shall be invoked.  These two attributes are required.
+## `type` and `method` attribute ##
+The `type` attribute is the agent type that shall be used by the scheduler mediator, and the `method` specifies the method name that mediator shall invoke.  These two attributes are required.
 
 ## `executionPriority` attribute ##
-The `executionPriority` is an optional property that handles the execution order of agents.  The `executionPriority` is an integer value that is assigned to agents based on their ordinal position (starting from 0).  If multiple agents are scheduled to run at a specific time, then they are executed in the order specified by this property.  The execution order can be changed by either changing the order in which agents are defined within the configuration file or by explicitly specifying the execution order.  Agents are executed from smallest to the largest execution priority value. Negative values for this property are permitted. 
+The `executionPriority` is an optional attribute that handles the execution order of agents.  The `executionPriority` is an integer value that is assigned to agents based on their ordinal position (starting from 0).  If multiple agents are scheduled to run at a specific time, then they are executed in the order specified by this property.  The execution order can be changed by either changing the order in which agents are defined within the configuration file or by explicitly specifying the execution order.  Agents are executed from smallest to the largest execution priority value. Negative values for this property are permitted. 
 
 ## `interval` attribute ##
 As mentioned, the interval is extended from this:
@@ -80,7 +80,7 @@ to:
 
 	<agent interval="startTimeStamp|endTimeStamp|DaysOfWeek|durationOrTime" ... />  
 
- This attributes is a required attribute, which contains either sleep duration between agent executions or the execution time of the day.  You may recognize the new format from Sitecore content tree item `/sitecore/system/Tasks/Schedules/*` scheduler field.  Internally, the module uses Sitecore.Tasks.Recurrence to parse the interval string pattern, which is a pipe delimited values for: `startTimeStamp|endTimeStamp|DaysOfWeek|durationOrTime`.  Below are examples, of agents running every 15 minutes:
+ The required interval attribute contains either sleep duration between agent executions or the execution time of the day.  You may recognize the new format from Sitecore content tree item `/sitecore/system/Tasks/Schedules/*` scheduler field.  Internally, the module uses Sitecore.Tasks.Recurrence to parse the interval string pattern, which is a pipe delimited values for: `startTimeStamp|endTimeStamp|DaysOfWeek|durationOrTime`.  Below are examples, of agents running every 15 minutes:
 
 	<agent interval="00:15:00" />
 
@@ -90,7 +90,7 @@ to:
 
 	<agent interval="2000-12-31T23:59:59Z||0|00:15:00" ... />
 
-The ***startTimeStamp*** and ***endTimeStamp*** are [iso time](https://en.wikipedia.org/wiki/ISO_8601 "ISO 8601") format, which can make use of constant strings `today`, `now`, `tomorrow`, `yesterday`.  For example, *you can disable an agent by setting the end time stamp to `yesterday`* instead of changing the sleep duration to zero.   Note that the start time of the last entry from above example contains the optional **Z** suffix for start time, which designates zero Utc offset; otherwise, the time is checked against the local server time. If the value for start and end time stamps are excluded (e.g. "|||00:15:00") then they are set to `DateTime.MinValue` and `DateTime.MaxValue` respectively.
+The ***startTimeStamp*** and ***endTimeStamp*** are [iso time](https://en.wikipedia.org/wiki/ISO_8601 "ISO 8601") format, which can make use of constant strings `today`, `now`, `tomorrow`, `yesterday`.  For example, you can *disable an agent* by setting the end time stamp to `yesterday` instead of changing the sleep duration to zero.   Note that the start time of the last entry from the above example contains the optional **Z** suffix for start time, which designates zero Utc offset; otherwise, the time is checked against the local server time. If the value for start and end time stamps are excluded (e.g. "|||00:15:00") then they are set to `DateTime.MinValue` and `DateTime.MaxValue` respectively.
 
 The start time stamp plays an important role in scheduling, as it is used to determine the next agent execution time.  For example, if you want to execute the agent every hour at 7 minutes past the hour then you would put your initial start time to be 7 minutes past the hour. The following example demonstrates such functionality:
 
@@ -101,7 +101,7 @@ The days of the week is a numeric value, where `Everyday=0`, `Sun=1`, `Mon=2`, `
 
 	<agent interval="||65|@01:00:00" ... />
 
-The last entry of the interval attribute, ***DurationOrTime***, is either agent sleep duration or scheduled time of the day for execution.  If this field is prefixed by the symbol **@** (like above example), then it is interpreted as a specific execution  time; otherwise, it is interpreted as an interval, which is a .NET [TimeSpan](https://msdn.microsoft.com/en-us/library/ee372286(v=vs.110).aspx "TimeSpan"). Also note that the above example excludes the start time stamp; therefore, the day of the week comparison is done against local server time.
+The last entry of the interval attribute, ***DurationOrTime***, is either agent sleep duration or scheduled time of the day for execution.  If this field is prefixed by the symbol **@** (like the above example), then it is interpreted as a specific execution  time; otherwise, it is interpreted as an interval, which is a .NET [TimeSpan](https://msdn.microsoft.com/en-us/library/ee372286(v=vs.110).aspx "TimeSpan"). Also note that the above example excludes the start time stamp; therefore, the day of the week comparison is done against local server time.
 
 Below example will execute agents at 4 `am` because the `@` prefix is included:
 
@@ -163,7 +163,7 @@ where as the following examples will execute agents every 4 hours because the `@
 	  </sitecore>
 	</configuration>
 
-###2. Agent processor example###
+### 2. Agent processor example ###
 
 	namespace Sitecore.Strategy.Scheduler.Example
 	{
