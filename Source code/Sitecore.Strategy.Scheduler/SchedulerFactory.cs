@@ -38,6 +38,12 @@ namespace Sitecore.Strategy.Scheduler
             _agentNameConflictList  = new HashSet<string>();
         }
 
+
+        public AgentExecutionRecord NewAgentExecutionRepositoryRecord()
+        {
+            return new AgentExecutionRecord();
+        }
+
         public ISchedulerArgs NewSchedulerPipelineArgs()
         {
             var xPath = string.Format("pipelines/group[@groupName='{0}']/pipelines/scheduler.start", 

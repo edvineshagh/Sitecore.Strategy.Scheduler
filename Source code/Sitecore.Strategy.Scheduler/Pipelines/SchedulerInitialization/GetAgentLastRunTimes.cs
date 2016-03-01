@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Linq;
 using Sitecore.Diagnostics;
+using Sitecore.Diagnostics.PerformanceCounters;
+using Sitecore.Strategy.Scheduler.Model;
+using Sitecore.Strategy.Scheduler.Model.NullAgent;
 
 namespace Sitecore.Strategy.Scheduler.Pipelines.SchedulerInitialization
 {
@@ -14,33 +18,44 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.SchedulerInitialization
                 , this);
 
             var agentHistory  = FactoryInstance.Current.NewExecutionRepository();
-            
-            foreach (var agentMediatorSet in schedulerArgs.AgentMediators)
+
+
+            // Remove all agents from heap to reload LastRunTime and 
+            // re-add them because the NextRunTime may change when LastRunTime changes
+            // therefore, we need to rebuild the Heap. 
+
+
+            var agentMediators = new OrderedAgentMediators(schedulerArgs.AgentMediators.Count);
+
+            while (schedulerArgs.AgentMediators.Count > 0)
             {
-                var executionTime = agentMediatorSet.Key;
-                var agentMediatorList = agentMediatorSet.Value;
+                var agentMediator = schedulerArgs.AgentMediators.Pop();
 
-                foreach (var agentMediatorPriority in agentMediatorList)
+                if (agentMediator == null || agentMediator is NullAgentMediator) continue;
+
+                try
                 {
-                    var priority = agentMediatorPriority.Key;
-                    var agentMediator = agentMediatorPriority.Value;
-
-                    try
+                    var record = agentHistory.GetById(agentMediator.Name);
+                    if (record != null)
                     {
-                        agentMediator.NextRunTime = agentHistory.GetLastRuntime(agentMediator.Name);
+                        agentMediator.SetLastRunTime(record.LastRunTime);
                     }
-                    catch
-                    {
-                        Log.Error(
-                            string.Format("Scheduler - Unable to determine agent type for {0}"
-                                         ,  agentMediator.Name)
-                          , this );
+                    agentMediators.Add(agentMediator);
 
-                        agentMediator.NextRunTime = DateTime.UtcNow;
-                    }
                 }
-                
+                catch
+                {
+                    Log.Error(string.Format("Scheduler - Unable to determine agent type for {0}."
+                               , agentMediator.Name)
+                        , this);
+
+                    agentMediator.SetNextRunTime(DateTime.UtcNow);
+                }
             }
+
+            schedulerArgs.AgentMediators = agentMediators;
+
+  
         }
     }
 }

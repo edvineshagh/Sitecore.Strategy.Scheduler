@@ -124,41 +124,44 @@ where as the following examples will execute agents every 4 hours because the `@
 	    <scheduling>
 		  <!-- Simple agent 
 		  -->
-	      <agent name ="AA11"
+	       <agent name ="AAA"
 	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
 	             method="Run"
 	             interval="00:00:20">
-	             <param desc="messageToLog">====AAAA===== Test Log </param> 
+	             <param desc="messageToLog">====AAAA===== Test Log </param>
+	            <param desc="sleep duration for test logging agent">0</param>
 	      </agent>
 	      
-	      <!-- This agent runs first because of the executionPriority attribute
-		  -->
-	      <agent name="BB22"
+	      <!-- this agent runs first because of the executionPriority attribute-->
+	      <agent name="BBB"
 	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example" 
 	             method="Run" 
 	             interval="00:00:30"
 	             executionPriority="-1">
 	              <param desc="messageToLog">====BBBB===== Test Log </param>
+	              <param desc="sleep duration for test logging agent">0</param>
 	      </agent>
 	
-	      <!-- This agent runs on Friday at 2:00 pm server time
-		  -->
-	      <agent name="CC33"
+	      <!-- run agent every 15 minutes pass the hour -->
+	      <agent name="CCC"
 	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
 	             method="Run"
-	             interval="||16|@14:00:00">
-	             <param desc="messageToLog">====DDDD===== Test Log </param>
+	             interval="0001-01-01T00:00:15Z|||00:01:00"> 
+	              <param desc="messageToLog">====CCCC===== Test Log </param>
+	              <param desc="sleep duration for test logging agent">0</param>
 	      </agent>
 	
-	      <!-- Run agent every 15 minutes pass the hour.  
- 			   To use Utc time add the "Z" suffix to start time. 
-          -->
-	      <agent name="DD44"
-	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
-	             method="Run"
-	             interval="0001-01-01T00:15:00|||01:00:00"> 
-	             <param desc="messageToLog">====DDDD===== Test Log </param>
+	      <!-- run agent on Friday at 2:00 pm local server time where
+	           Everyday=0, Sun=1, Mon=2, Tue=4, Wed=8, Thu=16, Fri=32, Sat=64
+	      -->
+	      <agent name="DDD"
+	         type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
+	         method="Run"
+	         interval="||0|@14:00:00">
+	        <param desc="messageToLog">====DDDD===== Test Log </param>
+	        <param desc="sleep duration for test logging agent">0</param>
 	      </agent>
+
 	    </scheduling>
 	  </sitecore>
 	</configuration>
@@ -170,24 +173,45 @@ where as the following examples will execute agents every 4 hours because the `@
 	    public class LoggerAgent
 	    {
 	        private readonly string _messageToLog ;
-	
+			private readonly int _sleepDurationInSeconds;
+
 	        private int _counter = 0;
+	        
 	
-	        public LoggerAgent(string messageToLog)
+	        public LoggerAgent(string messageToLog) : this(messageToLog, 0)
+	        {
+	        }
+	
+	        public LoggerAgent(string messageToLog, string sleepDurationInSeconds)
+	        {
+	            int.TryParse(sleepDurationInSeconds, out _sleepDurationInSeconds);
+	            _messageToLog = messageToLog;
+	
+	        }
+	
+	        public LoggerAgent(string messageToLog, int sleepDurationInSeconds)
 	        {
 	            _messageToLog = messageToLog;
+	            _sleepDurationInSeconds = sleepDurationInSeconds;
 	        }
 	
 	        public void Run()
 	        {
-	            Sitecore.Diagnostics.Log.Info(string.Format(
-					"{0}{1}",_messageToLog, ++_counter), this);
+	
+	            Sitecore.Diagnostics.Log.Info(string.Format("{0}{1} - LoggerAgent sleep duration: {2} seconds"
+	                ,_messageToLog, ++_counter, _sleepDurationInSeconds), this);
+	
+	            if (_sleepDurationInSeconds > 0)
+	            {
+	                Thread.Sleep(_sleepDurationInSeconds);
+	            }
 	        }
 	    }
 	}
 
 # <a name="Concerns"></a> 5. Concerns #
-This extension has not been load/stress tested, nor has it been exercised in production environment.  In theory, it should perform better because the sleep duration is no longer fixed; rather, the thread sleeps until the next agent execution is needed.  The sleep duration within configuration setting `scheduling/frequency` is still utilized if the next execution duration is less than configured frequency.  Also, only scheduled agents are executed (as appose to evaluating every agent if it should be executed).
+This extension has not been load/stress tested, nor has it been exercised in production environment.  In theory, it should perform better because the sleep duration is no longer fixed; rather, the thread sleeps until the next agent execution is needed.  The sleep duration within configuration setting `scheduling/frequency` is still utilized if the next execution duration is less than configured frequency.  
 
 To accommodate variable size sleep duration a [heap](https://en.wikipedia.org/wiki/Heap_(data_structure)) is utilized.  After agents are executed, they are removed and re-added to the heap data structure to preserve the updated execution order; thereby, leading to object creation/destruction overhead.
+
 Also, this extension is extensible via pipelines, which leads to a degree of overhead; however, the value of extensible implementation should outweigh nominal overhead.

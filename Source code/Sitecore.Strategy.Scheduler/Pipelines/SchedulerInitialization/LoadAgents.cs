@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Sitecore.Configuration;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines;
@@ -19,6 +20,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.SchedulerInitialization
 
             try
             {
+                var agentMediatorList = new List<IAgentMediator>();
 
                 foreach (System.Xml.XmlNode agentNode in Factory.GetConfigNodes("scheduling/agent"))
                 {
@@ -45,18 +47,22 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.SchedulerInitialization
                                 , this
                                 );
 
-                            if (!schedulerArgs.AgentMediators.ContainsKey(agentMediator.NextRunTime))
-                            {
-                                schedulerArgs.AgentMediators.Add(agentMediator.NextRunTime, new SortedAgentMediators());
-                            }
-                            schedulerArgs.AgentMediators[agentMediator.NextRunTime].Add(agentMediator);
+                            agentMediatorList.Add(agentMediator);
+
                         }
                     }
                     catch (Exception exception)
                     {
                         Log.Error("Scheduler - Error while instantiating agent. Definition: " + agentNode.OuterXml, exception, this);
                     }
+
                 }
+
+                schedulerArgs.ProcessedAgentMediators = new ProcessedAgentMediators(agentMediatorList.Count);
+
+                schedulerArgs.AgentMediators = new OrderedAgentMediators(agentMediatorList.Count);
+                agentMediatorList.ForEach(agentMediator => schedulerArgs.AgentMediators.Add(agentMediator));
+                
                 Log.Info("Scheduler - Agents load complete.", this);
 
             }

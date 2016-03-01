@@ -8,7 +8,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines
 {
     public interface ISchedulerArgs
     {
-        AgentPriorityList AgentMediators { get; }
-        HashSet<IAgentMediator> ProcessedAgentMediators { get; }
+        IAgentMediatorsHeap AgentMediators { get; set;  }
+        IAgentMediators ProcessedAgentMediators { get; set;  }
     }
 }

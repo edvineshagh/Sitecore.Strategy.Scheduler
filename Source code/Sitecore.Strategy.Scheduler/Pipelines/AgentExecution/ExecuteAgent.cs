@@ -32,7 +32,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
                 Log.Info(
                         string.Format("Scheduler - End execute agent: {0}.  Queue next runtime for: {1}."
                             , executeAgentArgs.Agent.Name
-                            , DateUtil.ToServerTime(executeAgentArgs.Agent.NextRunTime).ToString("yyyy-MM-dd HH:mm:ss")
+                            , DateUtil.ToServerTime(executeAgentArgs.Agent.GetNextRunTime()).ToString("yyyy-MM-dd HH:mm:ss")
                         ) 
                     , this)
                 ;

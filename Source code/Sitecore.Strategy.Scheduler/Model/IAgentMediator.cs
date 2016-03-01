@@ -16,12 +16,22 @@ namespace Sitecore.Strategy.Scheduler.Model
         /// <summary>
         /// Last time that the agent was executed.
         /// </summary>
-        DateTime LastRunTime { get; set; }
+        void SetLastRunTime(DateTime value);
+
+        /// <summary>
+        /// Last time that the agent was executed.
+        /// </summary>
+        DateTime GetLastRunTime();
 
         /// <summary>
         /// Next time that the agent is scheduler to execute.
         /// </summary>
-        DateTime NextRunTime { get; set; }
+        void SetNextRunTime(DateTime value);
+
+        /// <summary>
+        /// Next time that the agent is scheduler to execute.
+        /// </summary>
+        DateTime GetNextRunTime();
 
         /// <summary>
         /// Recurrence scheduling mediator

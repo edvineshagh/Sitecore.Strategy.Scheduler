@@ -25,9 +25,9 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 
 
 
-            var nextAgentTimeSpan = schedulerArgs.AgentMediators == null
+            var nextAgentTimeSpan = schedulerArgs.AgentMediators == null || schedulerArgs.AgentMediators.Count == 0
                 ? sleepInterval
-                : schedulerArgs.AgentMediators.First().Key - DateTime.UtcNow;
+                : schedulerArgs.AgentMediators.Top().GetNextRunTime() - DateTime.UtcNow;
 
 
             // Wait until configured scheduling/frequency if next agent execution is less than

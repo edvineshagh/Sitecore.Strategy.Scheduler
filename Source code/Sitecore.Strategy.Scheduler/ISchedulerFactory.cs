@@ -19,6 +19,12 @@ namespace Sitecore.Strategy.Scheduler
         CorePipeline   NewSchedulerPipeline();
 
         /// <summary>
+        /// Create an instance of object used to persist into repository.
+        /// </summary>
+        /// <returns></returns>
+        AgentExecutionRecord NewAgentExecutionRepositoryRecord();
+
+        /// <summary>
         /// Create an instance of PipelineArgs for <see cref="NewSchedulerPipeline"/>.
         /// </summary>
         /// <returns></returns>

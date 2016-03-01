@@ -36,16 +36,22 @@ namespace Sitecore.Strategy.Scheduler.Model.NullAgent
 
         public string TypeName  {get; private set;}
 
-        public DateTime LastRunTime
+        public void SetLastRunTime(DateTime value)
         {
-            get { return DateTime.MaxValue; }
-            set { }
         }
 
-        public DateTime NextRunTime
+        public DateTime GetLastRunTime()
         {
-            get { return LastRunTime; }
-            set { }
+            return DateTime.MaxValue;
+        }
+
+        public void SetNextRunTime(DateTime value)
+        {
+        }
+
+        public DateTime GetNextRunTime()
+        {
+            return DateTime.MaxValue;
         }
 
         public bool IsDue

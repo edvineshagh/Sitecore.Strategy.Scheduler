@@ -58,74 +58,79 @@ namespace Sitecore.Strategy.Scheduler.Model
             }
             finally
             {
-                this.LastRunTime = DateTime.UtcNow;
+                this.SetLastRunTime(DateTime.UtcNow);
                 _recalcNextRunTime = true;
             }
         }
 
 
-        public DateTime LastRunTime { get; set; }
+        private DateTime _lastRunTime;
+
+        public void SetLastRunTime(DateTime value)
+        {
+            _lastRunTime = value;
+            _recalcNextRunTime = true;
+        }
+
+        public DateTime GetLastRunTime()
+        {
+            return _lastRunTime;
+        }
 
         private DateTime _nextRunTime;
-        public DateTime NextRunTime
+
+        public void SetNextRunTime(DateTime value)
         {
+            _nextRunTime = value;
+            _recalcNextRunTime = false;
+        }
 
-            set
+        public DateTime GetNextRunTime()
+        {
+            if (_recalcNextRunTime)
             {
-                _nextRunTime = value;
                 _recalcNextRunTime = false;
-            }
+                var now = DateTime.UtcNow;
+                var oneDay = new TimeSpan(days: 1, hours: 0, minutes: 0, seconds: 0);
 
-            get
-            {
-                if (_recalcNextRunTime)
+                if (!IsRecurrenceInterval)
                 {
-                    _recalcNextRunTime = false;
-                    var now = DateTime.UtcNow;
-                    var oneDay = new TimeSpan(days: 1, hours: 0, minutes: 0, seconds: 0);
+                    _nextRunTime = this.GetLastRunTime() - GetLastRunTime().TimeOfDay + this.Recurrence.Interval;
 
-                    if (!IsRecurrenceInterval)
-                    {                        
-                        _nextRunTime = this.LastRunTime - LastRunTime.TimeOfDay + this.Recurrence.Interval;
-
-                        const int twoWeeks = 14;
-                        int additionalDays  = 0;
-                        while ( //_nextRunTime < now ||
-                                _nextRunTime < this.LastRunTime || 
-                                !IsValidDay(_nextRunTime) ||
-                                additionalDays > twoWeeks  )
-                        {
-                            _nextRunTime += oneDay;
-                            additionalDays++;
-                        }
-
-                        if (additionalDays > twoWeeks)
-                        {
-                            Log.Error("Scheduler - Disabling agent. Infinite loop detected for agent next runtime - " + this.Name, this);
-                            _nextRunTime = DateTime.MaxValue;
-                        }
-                        
-                    }
-                    else if (this.Recurrence.Interval.Ticks > 0)
+                    const int twoWeeks = 14;
+                    int additionalDays = 0;
+                    while ( //_nextRunTime < now ||
+                        _nextRunTime < this.GetLastRunTime() ||
+                        !IsValidDay(_nextRunTime) ||
+                        additionalDays > twoWeeks)
                     {
-                        var executeCount = (this.LastRunTime - this.Recurrence.StartDate).Ticks
-                                           / this.Recurrence.Interval.Ticks;
-
-                        var nextRunTimespan = new TimeSpan((1 + executeCount) * this.Recurrence.Interval.Ticks);
-
-                        _nextRunTime = this.Recurrence.StartDate.AddTicks(nextRunTimespan.Ticks);
+                        _nextRunTime += oneDay;
+                        additionalDays++;
                     }
-                    else
+
+                    if (additionalDays > twoWeeks)
                     {
-                        // Zero interval ticks means that the agent is disabled
+                        Log.Error("Scheduler - Disabling agent. Infinite loop detected for agent next runtime - " + this.Name,
+                            this);
                         _nextRunTime = DateTime.MaxValue;
-                    }                
-
+                    }
                 }
-                return _nextRunTime;
+                else if (this.Recurrence.Interval.Ticks > 0)
+                {
+                    var executeCount = (this.GetLastRunTime() - this.Recurrence.StartDate).Ticks
+                                       /this.Recurrence.Interval.Ticks;
 
+                    var nextRunTimespan = new TimeSpan((1 + executeCount)*this.Recurrence.Interval.Ticks);
+
+                    _nextRunTime = this.Recurrence.StartDate.AddTicks(nextRunTimespan.Ticks);
+                }
+                else
+                {
+                    // Zero interval ticks means that the agent is disabled
+                    _nextRunTime = DateTime.MaxValue;
+                }
             }
-
+            return _nextRunTime;
         }
 
         private bool IsValidDay(DateTime dateTime)
@@ -153,7 +158,7 @@ namespace Sitecore.Strategy.Scheduler.Model
 
                 bool isDue = this.Recurrence.InRange(now)   /* between start and end date in UTC */
                             && isValidDayOfWeek
-                            && now > this.NextRunTime;
+                            && now > this.GetNextRunTime();
 
                 return isDue;
             }

@@ -8,14 +8,14 @@ using Sitecore.Pipelines;
 
 namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 {
-    public class InitializeExecutedList
+    public class InitializeExecutionList
     {
         public void Process(ISchedulerArgs schedulerArgs)
         {
             Assert.ArgumentNotNull(schedulerArgs, "schedulerArgs");
             Assert.IsTrue(schedulerArgs is PipelineArgs, "schedulerArgs is Not PipelineArgs");
 
-            Log.Info("Scheduler - load last run times.", this);
+            Log.Info("Scheduler - Clear processed agents list.", this);
 
             if (HostingEnvironment.ShutdownReason != ApplicationShutdownReason.None)
             {
@@ -23,6 +23,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
             }
             else
             {
+
                 schedulerArgs.ProcessedAgentMediators.Clear();
             }
             

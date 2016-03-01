@@ -20,46 +20,46 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 
             Log.Info("Scheduler - Execute all agents.", this);
 
-            var executedKeyList = new List<DateTime>();
-
 
             var executeAgentPipeline = FactoryInstance.Current.NewAgentExecuteAgentPipeline();
 
-            foreach (KeyValuePair<DateTime, SortedAgentMediators> agentsKeyValue in schedulerArgs.AgentMediators)
+            if (schedulerArgs.AgentMediators.Count == 0)
             {
-                // Execute based on sorted list
-                if (agentsKeyValue.Key > DateTime.UtcNow 
-                || HostingEnvironment.ShutdownReason != ApplicationShutdownReason.None)
+                return;
+            }
+
+
+            // process all agents that are due until this point
+
+            var now = DateTime.UtcNow;
+
+            IAgentMediator topAgentMediator;
+
+            while ((topAgentMediator=schedulerArgs.AgentMediators.Top()).GetNextRunTime() < now
+                 && HostingEnvironment.ShutdownReason == ApplicationShutdownReason.None)
+            {
+
+                
+                try
                 {
-                    return;
-                }
+                    var agentArgs = FactoryInstance.Current.NewAgentExecuteAgentPipelineArgs();
+                    agentArgs.Agent = topAgentMediator;
+                    agentArgs.IsExecuted = false;
 
-                executedKeyList.Add(agentsKeyValue.Key);
+                    executeAgentPipeline.Run(agentArgs as PipelineArgs);
 
-                var sortedAgents = agentsKeyValue.Value;
-
-                foreach (var agentMediator in sortedAgents.Values)
-                {
-
-                    try
-                    {
-                        var agentArgs = FactoryInstance.Current.NewAgentExecuteAgentPipelineArgs();
-                        agentArgs.Agent = agentMediator;
-                        agentArgs.IsExecuted = false;
-
-                        executeAgentPipeline.Run(agentArgs as PipelineArgs);
-
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error("Scheduler - Exception in agent: " + agentMediator.Name, exception, this);
-                    }
-                    finally
-                    {
-                        schedulerArgs.ProcessedAgentMediators.Add(agentMediator);
-                    }
+                    schedulerArgs.AgentMediators.UpdateTop();
 
                 }
+                catch (Exception exception)
+                {
+                    Log.Error("Scheduler - Exception in agent: " + topAgentMediator.Name, exception, this);
+                }
+                finally
+                {
+                    schedulerArgs.ProcessedAgentMediators.Add(topAgentMediator);
+                }
+
             }
         }
 

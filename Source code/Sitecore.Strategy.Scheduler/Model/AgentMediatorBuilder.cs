@@ -124,7 +124,7 @@ namespace Sitecore.Strategy.Scheduler.Model
 
             public Builder SetLastRunTime(DateTime lastRunTime)
             {
-                _agentMediator.LastRunTime = lastRunTime;
+                _agentMediator.SetLastRunTime(lastRunTime);
                 return this;
             }
 

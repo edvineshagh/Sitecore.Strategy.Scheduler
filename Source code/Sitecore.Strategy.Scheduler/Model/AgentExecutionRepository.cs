@@ -15,7 +15,7 @@ namespace Sitecore.Strategy.Scheduler.Model
         private string _logFile;
         private readonly bool _append;
         private readonly DateTime _defaultLastRuntime;
-        private Dictionary<string, DateTime> _lastRunTimes;
+        private Dictionary<string, IAgentExecutionRecord> _inMemExecutionRecords;
 
 
         // When appending to file, we need to find to location of the last write operation, 
@@ -29,12 +29,14 @@ namespace Sitecore.Strategy.Scheduler.Model
         /// Keep track of agent execution due to worker process recycling.
         /// </summary>
         /// <param name="logFile">Logfile to flush into or retrieve from for last executed time</param>
-        public AgentExecutionRepository(string logFile, bool append)
+        /// <param name="append">Append to log file if true; otherwise, overwrite file</param>
+        /// <param name="defaultLastRunTime">Default dateTime to use when agent record not found</param>
+        public AgentExecutionRepository(string logFile, bool append, DateTime defaultLastRunTime)
         {
             try
             {
                 _append = append;
-                _defaultLastRuntime = DateTime.UtcNow;
+                _defaultLastRuntime = defaultLastRunTime;
                 _logFile = ParsePath( logFile );
             }
             catch (Exception e)
@@ -48,80 +50,55 @@ namespace Sitecore.Strategy.Scheduler.Model
             
         }
 
-        /// <summary>
-        /// Replace macro string with respective configuration settings 
-        /// and return full file path.  For example, replace $(DataFolder) with respective value from configuration file.
-        /// </summary>
-        /// <param name="logPath">File path to parse</param>
-        /// <returns>Full file path</returns>
-        private string ParsePath(string logPath)
+
+        public AgentExecutionRepository(string logFile, bool append) : this(logFile, append, DateTime.MinValue)
         {
-
-            var regEx = new Regex(@"\$\(([^)]+)\)");
-
-            foreach (Match match in regEx.Matches(logPath))
-            {
-                var token = match.Groups[0].Value;
-                var param = match.Groups[1].Value;
-
-                logPath = logPath.Replace(token, 
-                    Sitecore.Configuration.Settings.GetSetting(param,token)
-                    );
-            }
-            
-            logPath = Path.GetFullPath(logPath);
-
-            return logPath;
         }
 
 
         /// <summary>
-        /// Last execution runtime for each agent is stored via Agent name hash,
-        /// because same agent type maybe used more than once.  So, we use the
-        /// agent name, which is guaranteed to be unique when the 
-        /// SchedulerFactory.NewAgentMediator() creates the agent.
+        /// Retrieve last runtime record for the specified agent.
         /// </summary>
-        private Dictionary<string, DateTime> LastRunTimes
+        /// <param name="agentName">Agent name as defined in the config setting. if Agent name is omitted, then full assembly type maybe used</param>
+        /// <returns>null if agent is not found; otherwise, respective record is returned.</returns>
+        public IAgentExecutionRecord GetById(string agentName)
         {
-            get
-            {
-                if (_lastRunTimes == null && _logFile !=null)
-                {
-                    try {
-                        _lastRunTimes = LoadLastAgentsRunTime();
-                        Sitecore.Diagnostics.Log.Info(
-                            string.Format("Scheduler - Agent execution repository log {0} is Loaded.", _logFile), this);
-                    }
-                    catch (Exception e)
-                    {
-                        _lastRunTimes = new Dictionary<string, DateTime>();
+            return InMemExecutionRecords.ContainsKey(agentName) ? InMemExecutionRecords[agentName] : null;
+        }
 
-                        Sitecore.Diagnostics.Log.Error(
-                            string.Format("Scheduler - Agent execution repository log path {0} is inaccessible.", _logFile), e, this);
 
-                        _logFile = null;
-                    
-                    }
-                }
-                return _lastRunTimes;
-            }
+        public void Add(IAgentExecutionRecord record)
+        {
+            Assert.ArgumentNotNull(record, "record");
+            Assert.ArgumentNotNull(record.AgentType, "record.AgentType");
+            Assert.ArgumentNotNullOrEmpty(record.AgentName, "record.AgentName");
+            InMemExecutionRecords[record.AgentName] = record;
+        }
+
+
+        public IEnumerable<IAgentExecutionRecord> GetExecutionRecords()
+        {
+            return InMemExecutionRecords == null
+                ? null
+                : InMemExecutionRecords.Values;
         }
 
         /// <summary>
         /// Save agents last runtime into external storage.
         /// </summary>
-        /// <param name="priorityAgents">Agents</param>
-        
-        public void FlushLastAgentRunTimes(AgentPriorityList priorityAgents)
+        public void Save()
         {
-            if (priorityAgents == null || _logFile==null) return;
+            if (_inMemExecutionRecords == null )
+            {
+                Sitecore.Diagnostics.Log.Error("Scheduler - No agent execution records available to save.", this);
+            }
+            else if (_logFile == null)
+            {
+                Sitecore.Diagnostics.Log.Error("Scheduler - Skipping agent execution record save.  See earlier exception.", this);
+            }
 
             try
             {
-                // Because the execution time is being passed in, we will replace
-                // lastRunTimes with the new values at the end of this module.
-                var lastRunTimes = new Dictionary<string, DateTime>();
-
                 long lastOffset= _append ? GetLastFlushOffset() : 0;
 
                 var isAppendToFile = lastOffset > 0;
@@ -161,33 +138,135 @@ namespace Sitecore.Strategy.Scheduler.Model
                     
                     // Write execution times into file
                     //
-                    foreach (var sortedAgentsByName in priorityAgents.Values)
+                    foreach (var record in _inMemExecutionRecords.Values)
                     {
-                        foreach (var agentMediator in sortedAgentsByName.Values)
+                        if (record != null)
                         {
-                            var agentType = agentMediator.Agent.GetType().AssemblyQualifiedName;
-
-                            var record = string.Format("{0}\t{1}\t{2}",
-                                DateUtil.ToIsoDate(DateUtil.ToServerTime(agentMediator.LastRunTime), includeTicks: false, convertToUTC: false),
-                                agentMediator.Name, agentType
-                                );
-
-                            writer.WriteLine(record);
-
-                            lastRunTimes[agentMediator.Name] = agentMediator.LastRunTime;
+                            writer.WriteLine(Serialize(record));
                         }
                     }
 
-                    _lastRunTimes = lastRunTimes;
                 }
             }
             catch (Exception e)
             {
                Sitecore.Diagnostics.Log.Error(
-                   string.Format("Scheduler - Agent execution repository unable to write to {0}.  Turning off history flush.", _logFile), e, this);
+                   string.Format("Scheduler - Agent execution repository unable to write to {0}.", _logFile), e, this);
             }
 
         }
+
+
+        /// <summary>
+        /// Replace macro string with respective configuration settings 
+        /// and return full file path.  For example, replace $(DataFolder) with respective value from configuration file.
+        /// </summary>
+        /// <param name="logPath">File path to parse</param>
+        /// <returns>Full file path</returns>
+        private string ParsePath(string logPath)
+        {
+
+            var regEx = new Regex(@"\$\(([^)]+)\)");
+
+            foreach (Match match in regEx.Matches(logPath))
+            {
+                var token = match.Groups[0].Value;
+                var param = match.Groups[1].Value;
+
+                logPath = logPath.Replace(token,
+                    Sitecore.Configuration.Settings.GetSetting(param, token)
+                    );
+            }
+
+            logPath = Path.GetFullPath(logPath);
+
+            return logPath;
+        }
+
+
+        /// <summary>
+        /// Serialize a record for persisting into a file record.
+        /// </summary>
+        /// <param name="record">Record to serialize</param>
+        /// <returns>A string representing the serialized data</returns>
+        private string Serialize(IAgentExecutionRecord record)
+        {
+            return record == null ? string.Empty : string.Format("{0}\t{1}\t{2}\t{3}"
+                , DateUtil.ToIsoDate(DateUtil.ToServerTime(record.LastRunTime), includeTicks: false, convertToUTC: false)
+                , DateUtil.ToIsoDate(DateUtil.ToServerTime(record.NextRunTime), includeTicks: false, convertToUTC: false)
+                , record.AgentName
+                , record.AgentType == null ? string.Empty : record.AgentType.AssemblyQualifiedName);
+        }
+
+
+        /// <summary>
+        /// DeSerialize string into respective record.
+        /// </summary>
+        /// <param name="recordStr">A record that would represent IAgentExecutionRecord</param>
+        /// <returns>An instance of IAgentExecution record if the recordStr format is correct; otherwise, null is returned.</returns>
+        private IAgentExecutionRecord DeSerialize(string recordStr)
+        {
+
+            string lastRunDateTime, nextRunDateTime, name, typeName;
+            string[] arr = recordStr.Split(new char[] { '\t' });
+
+            // Skip lines that don't match tab delimited record format.
+            if (arr.Length != 4
+                || !DateUtil.IsIsoDate((lastRunDateTime = arr[0]))
+                || !DateUtil.IsIsoDate((nextRunDateTime = arr[1]))
+                || string.IsNullOrEmpty((name = arr[2]))
+                || string.IsNullOrEmpty((typeName = arr[3])))
+            {
+                return null;
+            }
+
+            var record = FactoryInstance.Current.NewAgentExecutionRepositoryRecord();
+
+
+            record.AgentName = name;
+
+            record.LastRunTime = DateUtil.ToUniversalTime(DateUtil.ParseDateTime(lastRunDateTime, _defaultLastRuntime));
+
+            record.NextRunTime = DateUtil.ToUniversalTime(DateUtil.ParseDateTime(nextRunDateTime, _defaultLastRuntime));
+
+            record.AgentType = Type.GetType(typeName);
+
+            return record;
+        }
+
+
+        /// <summary>
+        /// Last execution runtime for each agent is stored via Agent name hash.
+        /// Agent name is guaranteed to be unique when the 
+        /// SchedulerFactory.NewAgentMediator() creates the agent.
+        /// </summary>
+        private Dictionary<string, IAgentExecutionRecord> InMemExecutionRecords
+        {
+            get
+            {
+                if (_inMemExecutionRecords == null && _logFile != null)
+                {
+                    try
+                    {
+                        _inMemExecutionRecords = LoadLastAgentsRunTime();
+                        Sitecore.Diagnostics.Log.Info(
+                            string.Format("Scheduler - Agent execution repository log {0} is Loaded.", _logFile), this);
+                    }
+                    catch (Exception e)
+                    {
+                        _inMemExecutionRecords = new Dictionary<string, IAgentExecutionRecord>();
+
+                        Sitecore.Diagnostics.Log.Error(
+                            string.Format("Scheduler - Agent execution repository log path {0} is inaccessible.", _logFile), e, this);
+
+                        _logFile = null;
+
+                    }
+                }
+                return _inMemExecutionRecords;
+            }
+        }
+
 
         /// <summary>
         /// Returns the header string with a fixed size.  
@@ -197,8 +276,13 @@ namespace Sitecore.Strategy.Scheduler.Model
         /// <returns>Fixed size string</returns>
         private string GetHeaderString(long offset)
         {
-            return string.Format("# {0}{1,20}", FlushString, offset);
+            var offsetHeader = string.Format("# {0}{1,20}", FlushString, offset);
+            const string recordHeading = "# LastRunTime\tNextRunTime\tAgentName\tAgentType";
+
+            return string.Format("{0}\n{1}", offsetHeader, recordHeading);
+
         }
+
 
         /// <summary>
         /// Read the header of the file and obtain the last flush offset.
@@ -217,7 +301,7 @@ namespace Sitecore.Strategy.Scheduler.Model
             {
                 string line = reader.ReadLine();
                 int flushIndex;
-                if ((flushIndex = line.LastIndexOf(FlushString)) > 0)
+                if (line != null && (flushIndex = line.LastIndexOf(FlushString, System.StringComparison.Ordinal)) > 0)
                 {
                     lastOffset = long.TryParse(line.Substring(flushIndex + FlushString.Length), out lastOffset) ? lastOffset : 0;
                 }
@@ -225,27 +309,14 @@ namespace Sitecore.Strategy.Scheduler.Model
             return lastOffset;
         }
 
-        /// <summary>
-        /// Retrieve last runtime for the specified agent.
-        /// If the agent is not found, then defaultLastRuntime is returned
-        /// </summary>
-        /// <param name="agentName">Agent name as defined in the config setting.</param>
-        /// <returns></returns>
-        public DateTime GetLastRuntime(string agentName)
-        {
-            var index = agentName;
-            var lastRunTime = LastRunTimes.ContainsKey(index) ? LastRunTimes[index] : _defaultLastRuntime;
-            return lastRunTime;
-        }
-
 
         /// <summary>
         /// Retrieve last agent run times from repository
         /// </summary>
         /// <returns>A dictionary agent runtimes that is keyed by agentName /></returns>
-        private Dictionary<string, DateTime> LoadLastAgentsRunTime()
+        private Dictionary<string, IAgentExecutionRecord> LoadLastAgentsRunTime()
         {
-            var lastRunTimes = new Dictionary<string, DateTime>();
+            var lastRunTimes = new Dictionary<string, IAgentExecutionRecord>();
 
             if (_logFile == null || !File.Exists(_logFile))
             {
@@ -300,20 +371,20 @@ namespace Sitecore.Strategy.Scheduler.Model
                         }
                         else
                         {
-                            string dateTime, name, typeName;
-                            string[] arr = line.Split(new char[] {'\t'});
+                            var record = DeSerialize(line);
 
-                            // Skip lines that don't match tab delimited record format.
-                            if (arr.Length != 3
-                                || !DateUtil.IsIsoDate((dateTime = arr[0]))
-                                || string.IsNullOrEmpty((name = arr[1]))
-                                || string.IsNullOrEmpty((typeName = arr[2])))
+
+                            if (record == null
+                                || string.IsNullOrWhiteSpace(record.AgentName)
+                                || record.AgentType == null)
                             {
-                                continue;
+                                Log.Error("Scheduler - Unable to load agent last runtime record: " + line, this);
+                            }
+                            else
+                            {
+                                lastRunTimes[record.AgentName] = record;
                             }
 
-
-                            lastRunTimes[name] = DateUtil.ToUniversalTime( DateUtil.ParseDateTime(dateTime, _defaultLastRuntime));
                         }
                     }
                 }
@@ -330,5 +401,7 @@ namespace Sitecore.Strategy.Scheduler.Model
 
             return lastRunTimes;
         }
+
+
     }
 }

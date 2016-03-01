@@ -20,7 +20,12 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 
             var agentHistory = FactoryInstance.Current.NewExecutionRepository();
 
-            agentHistory.FlushLastAgentRunTimes(schedulerArgs.AgentMediators);
+            foreach (var record in schedulerArgs.AgentMediators.GetItems())
+            {
+                agentHistory.Add(record);
+            }
+            agentHistory.Save();
+            
         }
     }
 }

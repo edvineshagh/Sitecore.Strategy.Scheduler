@@ -41,6 +41,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lucene.Net">
+      <HintPath>$(SitecoreLibDir)Lucene.Net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Sitecore.Kernel">
       <HintPath>$(SitecoreLibDir)Sitecore.Kernel.dll</HintPath>
@@ -64,14 +68,19 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\AgentExecutionRecord.cs" />
     <Compile Include="Model\AgentMediator.cs" />
     <Compile Include="Model\AgentExecutionRepository.cs" />
     <Compile Include="Model\AgentMediatorBuilder.cs" />
+    <Compile Include="Model\IAgentExecutionRecord.cs" />
     <Compile Include="Model\IAgentExecutionRepository.cs" />
+    <Compile Include="Model\IAgentMediators.cs" />
+    <Compile Include="Model\IAgentMediatorsHeap.cs" />
     <Compile Include="Model\NullAgent\NullAgentMediator.cs" />
     <Compile Include="Model\IAgentMediator.cs" />
     <Compile Include="Model\NullAgent\DisabledAgentMediator.cs" />
     <Compile Include="ISchedulerFactory.cs" />
+    <Compile Include="Model\ProcessedAgentMediators.cs" />
     <Compile Include="Pipelines\AgentExecution\CanExecuteAgent.cs" />
     <Compile Include="Pipelines\AgentExecution\ExecuteAgentArgs.cs" />
     <Compile Include="Pipelines\AgentExecution\ExecuteAgent.cs" />
@@ -81,15 +90,13 @@
     <Compile Include="Pipelines\StartScheduler.cs" />
     <Compile Include="Pipelines\SchedulerInitialization\LoadAgents.cs" />
     <Compile Include="Pipelines\SchedulerInitialization\GetAgentLastRunTimes.cs" />
-    <Compile Include="Pipelines\WorkerLoop\InitializeExecutedList.cs" />
+    <Compile Include="Pipelines\WorkerLoop\InitializeExecutionList.cs" />
     <Compile Include="Pipelines\WorkerLoop\ExecuteAgents.cs" />
     <Compile Include="Pipelines\WorkerLoop\FlushAgentRuntimeToRepository.cs" />
     <Compile Include="Pipelines\WorkerLoop\SchedulerWait.cs" />
-    <Compile Include="Pipelines\WorkerLoop\ResetExecutionPriority.cs" />
     <Compile Include="Pipelines\SchedulerArgs.cs" />
-    <Compile Include="Model\AgentPriorityList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Model\SortedAgentMediators.cs" />
+    <Compile Include="Model\OrderedAgentMediators.cs" />
     <Compile Include="SchedulerFactory.cs" />
   </ItemGroup>
   <ItemGroup>

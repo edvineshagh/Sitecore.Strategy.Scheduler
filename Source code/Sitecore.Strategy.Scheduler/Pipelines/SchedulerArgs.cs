@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using Sitecore.Configuration;
 using Sitecore.Pipelines;
 using Sitecore.Strategy.Scheduler.Model;
 
@@ -11,12 +12,15 @@ namespace Sitecore.Strategy.Scheduler.Pipelines
     {
         public SchedulerArgs()
         {
-            this.AgentMediators = new AgentPriorityList();
-            this.ProcessedAgentMediators = new HashSet<IAgentMediator>();
+            int numberOfAgents = Factory.GetConfigNodes("scheduling/agent").Count;
+
+            this.AgentMediators = new OrderedAgentMediators(maxSize: numberOfAgents);
+
+            this.ProcessedAgentMediators = new ProcessedAgentMediators(maxSize: numberOfAgents);
         }
 
-        public AgentPriorityList AgentMediators { get; private set; }
+        public IAgentMediatorsHeap AgentMediators { get; set; }
 
-        public HashSet<IAgentMediator> ProcessedAgentMediators { get; private set; }
+        public IAgentMediators ProcessedAgentMediators { get; set; }
     }
 }

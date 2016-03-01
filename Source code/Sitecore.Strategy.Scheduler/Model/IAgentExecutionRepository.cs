@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Sitecore.Strategy.Scheduler.Model
 {
@@ -7,18 +8,30 @@ namespace Sitecore.Strategy.Scheduler.Model
     /// </summary>
     public interface IAgentExecutionRepository
     {
-        /// <summary>
-        /// Save agents last runtime into external storage.
-        /// </summary>
-        /// <param name="priorityAgents">Agents</param>
-        void FlushLastAgentRunTimes(AgentPriorityList priorityAgents);
 
         /// <summary>
-        /// Retrieve last runtime for the specified agent.
-        /// If the agent is not found, then defaultLastRuntime is returned.
+        /// Gets retrieves last agent execution record
         /// </summary>
-        /// <param name="agentName">Agent name as defined in the config setting.</param>
+        /// <param name="agentName">Unique agent name use to lookup record item</param>
+        /// <returns>If no record is found, then null is returned.  Otherwise, respective record is returned.</returns>
+        IAgentExecutionRecord GetById(string agentName);
+
+        /// <summary>
+        /// Returns all the execution records from the repository.
+        /// </summary>
         /// <returns></returns>
-        DateTime GetLastRuntime(string agentName);
+        IEnumerable<IAgentExecutionRecord> GetExecutionRecords();
+
+        /// <summary>
+        /// Add agent execution record to repository
+        /// </summary>
+        /// <param name="record">record to persist</param>
+        void Add(IAgentExecutionRecord record);
+
+        /// <summary>
+        /// Flush record into repository.
+        /// </summary>
+        void Save();
+
     }
 }
