@@ -9,6 +9,11 @@ using Sitecore.Strategy.Scheduler.Model;
 
 namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 {
+    /// <summary>
+    /// The processor is responsible for looping through every AgentMediator
+    /// whose NextRunTime is due and calling the execute pipeline
+    /// and then updating execution list for next time.
+    /// </summary>
     public class ExecuteAgents
     {
         public void Process(ISchedulerArgs schedulerArgs)
@@ -53,7 +58,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
                 }
                 catch (Exception exception)
                 {
-                    Log.Error("Scheduler - Exception in agent: " + topAgentMediator.Name, exception, this);
+                    Log.Error("Scheduler - Exception in agent: " + topAgentMediator.AgentName, exception, this);
                 }
                 finally
                 {

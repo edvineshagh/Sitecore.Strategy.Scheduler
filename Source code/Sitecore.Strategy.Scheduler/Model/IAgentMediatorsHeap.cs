@@ -13,44 +13,45 @@ namespace Sitecore.Strategy.Scheduler.Model
     public interface IAgentMediatorsHeap 
     {
         /// <summary>
-        /// Add agent mediator to the heap
+        /// Add agent mediator to the heap.
         /// </summary>
         /// <param name="agentMediator"></param>
         /// <returns></returns>
         IAgentMediator Add(IAgentMediator agentMediator);
 
         /// <summary>
-        /// Pop the top element from the heap
+        /// Pop the top element from the heap.
         /// </summary>
         /// <returns></returns>
         IAgentMediator Pop();
         
         /// <summary>
-        /// Peek at the top element on the heap
+        /// Peek at the top element on the heap.
         /// </summary>
         /// <returns></returns>
         IAgentMediator Top();
 
         /// <summary>
-        /// Update the top element when it is changed
+        /// Update the top element when it is changed.
         /// </summary>
         /// <returns></returns>
         IAgentMediator UpdateTop();
 
         /// <summary>
         /// Retrieve items from heap as immutable objects; 
-        /// so, that the internals of the heap are not effected.
+        /// so, that the internals of the heap are not effected;
+        /// thereby preserving the heap order.
         /// </summary>
         /// <returns></returns>
         IEnumerable<IAgentExecutionRecord> GetItems();
 
         /// <summary>
-        /// Clears contents of the heap
+        /// Clears contents of the heap.
         /// </summary>
         void Clear();
 
         /// <summary>
-        /// Returns the size of the heap
+        /// Returns number of elements in the heap.
         /// </summary>
         /// <value></value>
         int Count { get; }

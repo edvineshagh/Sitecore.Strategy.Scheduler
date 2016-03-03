@@ -20,31 +20,35 @@ namespace Sitecore.Strategy.Scheduler
     public class SchedulerFactory : ISchedulerFactory
     {
 
-        private const string PipelineGroupName = "scheduler"; 
+        protected const string PipelineGroupName = "scheduler"; 
         
         /// <summary>
         /// Used to determine the order in which agents are executed.
         /// </summary>
-        private int _executionPriorityCounter;
+        protected int ExecutionPriorityCounter;
 
         /// <summary>
         /// Used to keep track of agent names used, to insure we don't have duplicate names.
         /// </summary>
-        private readonly HashSet<string> _agentNameConflictList;
+        protected readonly HashSet<string> AgentNameConflictList;
 
 
         public SchedulerFactory()
         {
-            _agentNameConflictList  = new HashSet<string>();
+            AgentNameConflictList  = new HashSet<string>();
         }
 
 
-        public AgentExecutionRecord NewAgentExecutionRepositoryRecord()
+        public virtual AgentExecutionRecord NewAgentExecutionRepositoryRecord()
         {
             return new AgentExecutionRecord();
         }
 
-        public ISchedulerArgs NewSchedulerPipelineArgs()
+        /// <summary>
+        /// Create an instance of PipelineArgs for <see cref="NewSchedulerPipeline" />.
+        /// </summary>
+        /// <returns></returns>
+        public virtual ISchedulerArgs NewSchedulerPipelineArgs()
         {
             var xPath = string.Format("pipelines/group[@groupName='{0}']/pipelines/scheduler.start", 
                 PipelineGroupName);
@@ -61,12 +65,20 @@ namespace Sitecore.Strategy.Scheduler
 
         }
 
-        public CorePipeline NewSchedulerPipeline()
+        /// <summary>
+        /// Create a new instance of scheduler pipeline, which is the starting point of the scheduler.
+        /// </summary>
+        /// <returns></returns>
+        public virtual CorePipeline NewSchedulerPipeline()
         {
             return CorePipelineFactory.GetPipeline("scheduler.start", PipelineGroupName);
         }
 
-        public IExecuteAgentArgs NewAgentExecuteAgentPipelineArgs()
+        /// <summary>
+        /// Creates an instance of PipelineArgs for <see cref="NewAgentExecuteAgentPipeline" />.
+        /// </summary>
+        /// <returns></returns>
+        public virtual IExecuteAgentArgs NewAgentExecuteAgentPipelineArgs()
         {
 
             var xPath = string.Format("pipelines/group[@groupName='{0}']/pipelines/scheduler.executeAgent",
@@ -84,17 +96,25 @@ namespace Sitecore.Strategy.Scheduler
             return Activator.CreateInstance(argType) as IExecuteAgentArgs;
         }
 
-        public CorePipeline NewAgentExecuteAgentPipeline()
+        /// <summary>
+        /// Create a new pipeline instance for executing single agent.
+        /// </summary>
+        /// <returns></returns>
+        public virtual CorePipeline NewAgentExecuteAgentPipeline()
         {
             return CorePipelineFactory.GetPipeline("scheduler.executeAgent", PipelineGroupName);
         }
 
-        public CorePipeline NewThreadWorkerLoopPipeline()
+        /// <summary>
+        /// Create a new pipeline instance that is responsible for executing all agents via infinite loop thread.
+        /// </summary>
+        /// <returns></returns>
+        public virtual CorePipeline NewThreadWorkerLoopPipeline()
         {
             return CorePipelineFactory.GetPipeline("scheduler.threadWorkerLoop", PipelineGroupName);
         }
 
-        public IAgentExecutionRepository NewExecutionRepository()
+        public virtual IAgentExecutionRepository NewExecutionRepository()
         {
             return
                 Sitecore.Configuration.Factory.CreateObject("scheduling/agentExecutionRepository", true) as
@@ -107,7 +127,7 @@ namespace Sitecore.Strategy.Scheduler
         /// </summary>
         /// <param name="agentNode">xml node to agent with configuration path sitecore/scheduling/agent</param>
         /// <returns></returns>
-        public IAgentMediator NewAgentMediator(System.Xml.XmlNode agentNode)
+        public virtual IAgentMediator NewAgentMediator(System.Xml.XmlNode agentNode)
         {
             string agentName = null;
 
@@ -120,7 +140,7 @@ namespace Sitecore.Strategy.Scheduler
             int executionPrority ;
             if (!int.TryParse(XmlUtil.GetAttribute("executionPriority", agentNode), out executionPrority))
             {
-                executionPrority = _executionPriorityCounter++;
+                executionPrority = ExecutionPriorityCounter++;
             }
                         
             // Get unique agent name. 
@@ -133,9 +153,9 @@ namespace Sitecore.Strategy.Scheduler
             do
             {
                 agentPraposedName = string.Format("{0}{1}", agentName, (counter++ == 0) ? string.Empty : "." + counter);
-            } while (_agentNameConflictList.Contains(agentPraposedName))
+            } while (AgentNameConflictList.Contains(agentPraposedName))
                 ;
-            _agentNameConflictList.Add(agentPraposedName);
+            AgentNameConflictList.Add(agentPraposedName);
 
 			string intervalStrPattern = XmlUtil.GetAttribute("interval", agentNode) ?? string.Empty;
 
@@ -146,9 +166,9 @@ namespace Sitecore.Strategy.Scheduler
                     .SetExecuteMethod(methodName)
 
                     /* we set to default DateTime.MinValue, as appose to DateTime.UtcNow
-                     * because for schedules that are once a week our next runtime might
-                     * be one week later; but, we want it to run immediately.
-                     * The GetAgentLastRunTimes, should override this when possible
+                     * because for schedules that are once a week, may get next runtime 
+                     * that might be one week later; but, we want it to run immediately.
+                     * The GetAgentLastRunTimes pipeline, should override this when possible
                      */
                     .SetLastRunTime(DateTime.MinValue)
 

@@ -6,6 +6,10 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
 {
     public class ExecuteAgent
     {
+        /// <summary>
+        /// Execute agent if permitted; otherwise, abort the pipeline.
+        /// </summary>
+        /// <param name="executeAgentArgs">The execute agent arguments.</param>
         public void Process(IExecuteAgentArgs executeAgentArgs)
         {
             Assert.ArgumentNotNull(executeAgentArgs, "executeAgentArgs");
@@ -13,9 +17,8 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
             Assert.IsTrue(executeAgentArgs is PipelineArgs, "exectuedAgentArgs is Not PipelineArgs");
 
             Log.Info(
-                string.Format("Scheduler - {0} execute agent: {1}."
-                    , executeAgentArgs.CanExecute ? "Begin" : "Abort"
-                    , executeAgentArgs.Agent.Name)
+                string.Format("Scheduler - Begin execute agent: {0}."
+                    , executeAgentArgs.Agent.AgentName)
                 , this);
             
 
@@ -23,7 +26,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
 
             if (executeAgentArgs.CanExecute)
             {
-                Profiler.StartOperation(string.Format("Scheduler - agent {0}.", executeAgentArgs.Agent.Name));
+                Profiler.StartOperation(string.Format("Scheduler - agent {0}.", executeAgentArgs.Agent.AgentName));
                 executeAgentArgs.Agent.Execute();
                 Profiler.EndOperation();
 
@@ -31,7 +34,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
 
                 Log.Info(
                         string.Format("Scheduler - End execute agent: {0}.  Queue next runtime for: {1}."
-                            , executeAgentArgs.Agent.Name
+                            , executeAgentArgs.Agent.AgentName
                             , DateUtil.ToServerTime(executeAgentArgs.Agent.GetNextRunTime()).ToString("yyyy-MM-dd HH:mm:ss")
                         ) 
                     , this)
@@ -39,6 +42,10 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
             }
             else
             {
+                Log.Info(
+                    string.Format("Scheduler - Abort execution pipeline for agent: {0}."
+                    , executeAgentArgs.Agent.AgentName), this);
+
                 (executeAgentArgs as PipelineArgs).AbortPipeline();
 
             }

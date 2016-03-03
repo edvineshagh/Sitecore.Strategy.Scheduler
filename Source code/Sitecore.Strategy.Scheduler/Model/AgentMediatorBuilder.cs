@@ -23,9 +23,13 @@ namespace Sitecore.Strategy.Scheduler.Model
 
             }
 
+            /// <summary>
+            /// Builds an instance of AgentMediator.
+            /// </summary>
+            /// <returns></returns>
             public IAgentMediator Build()
             {
-                Assert.IsNotNullOrEmpty(_agentMediator.Name, "AgentName");
+                Assert.IsNotNullOrEmpty(_agentMediator.AgentName, "AgentName");
                 Assert.IsNotNull(_agentMediator.Agent, "Agent");
                 Assert.IsNotNullOrEmpty(_agentMediator._executeMethod, "ExecuteMethod");
                 Assert.IsNotNull(_agentMediator.Recurrence, "Recurrence");
@@ -33,7 +37,7 @@ namespace Sitecore.Strategy.Scheduler.Model
                 if (_agentMediator.IsRecurrenceInterval
                 && _agentMediator.Recurrence.Interval.Ticks == 0)
                 {
-                    return new DisabledAgentMediator(_agentMediator.Name);
+                    return new DisabledAgentMediator(_agentMediator.AgentName);
                 }
                 else
                 {
@@ -41,34 +45,61 @@ namespace Sitecore.Strategy.Scheduler.Model
                 }
             }
 
+            /// <summary>
+            /// Sets the name of the agent.
+            /// </summary>
+            /// <param name="name">The name.</param>
+            /// <returns>Builder</returns>
             public Builder SetAgentName(string name)
             {
                 _agentMediator._agentName = name;
                 return this;
             }
 
-
+            /// <summary>
+            /// Sets the agent instance.
+            /// </summary>
+            /// <param name="instance">The instance.</param>
+            /// <returns>Builder</returns>
             public Builder SetAgent(object instance)
             {
+                Assert.ArgumentNotNull(instance, "Agnet instance");
                 _agentMediator._agentInstance = instance;
                 return this;
             }
 
+            /// <summary>
+            /// Sets the execute method name that will be used to invoke the agent.
+            /// </summary>
+            /// <param name="methodName">Name of the method.</param>
+            /// <returns>Builder</returns>
             public Builder SetExecuteMethod(string methodName)
             {
+                Assert.ArgumentNotNullOrEmpty(methodName,"methodName");
                 _agentMediator._executeMethod = methodName;
                 return this;
             }
 
-
+            /// <summary>
+            /// Sets the execution recurrence schedule.
+            /// </summary>
+            /// <param name="recurrence">The recurrence.</param>
+            /// <returns>Builder.</returns>
             public Builder SetRecurrence(Recurrence recurrence)
             {
+                Assert.ArgumentNotNull(recurrence, "recurrence");
                 _agentMediator.Recurrence = recurrence;
                 return this;
             }
 
+            /// <summary>
+            /// Sets the execution recurrence schedule.
+            /// </summary>
+            /// <param name="recurrenceStrPattern">The recurrence string pattern.</param>
+            /// <returns></returns>
             public Builder SetRecurrence(string recurrenceStrPattern)
             {
+                Assert.ArgumentNotNullOrEmpty(recurrenceStrPattern, "recurrence");
 
                 // Utilize Sitecore.Tasks.Recurrence string pattern for interval
                 // So, if we only get the interval string, we will convert it 
@@ -116,18 +147,26 @@ namespace Sitecore.Strategy.Scheduler.Model
 
                 }
 
-                _agentMediator.Recurrence = new Recurrence(recurrenceStrPattern);
-
-                return this;
+                return SetRecurrence(new Recurrence(recurrenceStrPattern));
             }
 
-
+            /// <summary>
+            /// Sets the agent last run time.
+            /// </summary>
+            /// <param name="lastRunTime">The last run time.</param>
+            /// <returns>Builder.</returns>
             public Builder SetLastRunTime(DateTime lastRunTime)
             {
                 _agentMediator.SetLastRunTime(lastRunTime);
                 return this;
             }
 
+            /// <summary>
+            /// Sets the execution priority used for when multiple agents are scheduled to run at the same time.  
+            /// Execution priority is numeric order; therefore, lower numbers have a higher priority.
+            /// </summary>
+            /// <param name="priority">The priority.</param>
+            /// <returns>Builder.</returns>
             public Builder SetExecutionPriority(int priority)
             {
                 _agentMediator.ExecutionPriority = priority;

@@ -7,6 +7,9 @@ using Sitecore.Pipelines;
 
 namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
 {
+    /// <summary>
+    /// This processor is responsible for determining if an agent should be executed.
+    /// </summary>
     public class CanExecuteAgent
     {
         public void Process(IExecuteAgentArgs executeAgentArgs)
@@ -16,7 +19,7 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.AgentExecution
             Assert.IsTrue(executeAgentArgs is PipelineArgs, "exectuedAgentArgs is Not PipelineArgs");
 
             Log.Info(string.Format("Scheduler - Can execute agent: {0}."
-                , executeAgentArgs.Agent.Name), this);
+                , executeAgentArgs.Agent.AgentName), this);
 
             executeAgentArgs.CanExecute = executeAgentArgs.Agent.IsDue;
 

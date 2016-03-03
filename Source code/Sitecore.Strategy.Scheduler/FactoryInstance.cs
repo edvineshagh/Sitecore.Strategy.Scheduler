@@ -5,6 +5,9 @@ using System.Web;
 
 namespace Sitecore.Strategy.Scheduler
 {
+    /// <summary>
+    /// Singleton instance of the scheduler factory set via Sitecore configuration file.
+    /// </summary>
     public class FactoryInstance
     {
         private static readonly object _lock = new object();

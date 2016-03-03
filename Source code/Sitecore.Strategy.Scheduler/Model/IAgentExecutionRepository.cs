@@ -8,9 +8,8 @@ namespace Sitecore.Strategy.Scheduler.Model
     /// </summary>
     public interface IAgentExecutionRepository
     {
-
         /// <summary>
-        /// Gets retrieves last agent execution record
+        /// Gets retrieves last agent execution record.
         /// </summary>
         /// <param name="agentName">Unique agent name use to lookup record item</param>
         /// <returns>If no record is found, then null is returned.  Otherwise, respective record is returned.</returns>
@@ -23,7 +22,7 @@ namespace Sitecore.Strategy.Scheduler.Model
         IEnumerable<IAgentExecutionRecord> GetExecutionRecords();
 
         /// <summary>
-        /// Add agent execution record to repository
+        /// Add agent execution record to repository.
         /// </summary>
         /// <param name="record">record to persist</param>
         void Add(IAgentExecutionRecord record);

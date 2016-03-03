@@ -24,17 +24,17 @@ namespace Sitecore.Strategy.Scheduler.Model
         DateTime GetLastRunTime();
 
         /// <summary>
-        /// Next time that the agent is scheduler to execute.
+        /// Next time that the agent is scheduled to execute.
         /// </summary>
         void SetNextRunTime(DateTime value);
 
         /// <summary>
-        /// Next time that the agent is scheduler to execute.
+        /// Set the next time that the agent is scheduled to execute.
         /// </summary>
         DateTime GetNextRunTime();
 
         /// <summary>
-        /// Recurrence scheduling mediator
+        /// Recurrence schedule.
         /// </summary>
         Recurrence Recurrence { get; }
 
@@ -52,7 +52,7 @@ namespace Sitecore.Strategy.Scheduler.Model
         /// <summary>
         /// Agent name.
         /// </summary>
-        string Name { get; }
+        string AgentName { get; }
 
         /// <summary>
         /// Instance of the agent to be executed.
@@ -60,7 +60,7 @@ namespace Sitecore.Strategy.Scheduler.Model
         object Agent { get; }
 
         /// <summary>
-        /// Method that is responsible for invokation of the agent.
+        /// Method that is responsible for invocation of the agent.
         /// </summary>
         void Execute();
 

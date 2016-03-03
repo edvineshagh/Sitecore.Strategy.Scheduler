@@ -9,6 +9,9 @@ using Sitecore.Strategy.Scheduler.Pipelines.AgentExecution;
 
 namespace Sitecore.Strategy.Scheduler
 {
+    /// <summary>
+    /// Scheduler factory responsible for scheduling entities.
+    /// </summary>
     public interface ISchedulerFactory
     {
 
@@ -37,7 +40,7 @@ namespace Sitecore.Strategy.Scheduler
         CorePipeline      NewAgentExecuteAgentPipeline();
 
         /// <summary>
-        /// Creates an instance of PipelineArgs for <see cref="NewAgentExecuteAgentPipelineArgs"/>.
+        /// Creates an instance of PipelineArgs for <see cref="NewAgentExecuteAgentPipeline"/>.
         /// </summary>
         /// <returns></returns>
         IExecuteAgentArgs NewAgentExecuteAgentPipelineArgs();

@@ -124,7 +124,7 @@ where as the following examples will execute agents every 4 hours because the `@
 	    <scheduling>
 		  <!-- Simple agent 
 		  -->
-	       <agent name ="AAA"
+	       <agent name ="AA11"
 	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
 	             method="Run"
 	             interval="00:00:20">
@@ -133,7 +133,7 @@ where as the following examples will execute agents every 4 hours because the `@
 	      </agent>
 	      
 	      <!-- this agent runs first because of the executionPriority attribute-->
-	      <agent name="BBB"
+	      <agent name="BB22"
 	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example" 
 	             method="Run" 
 	             interval="00:00:30"
@@ -143,7 +143,7 @@ where as the following examples will execute agents every 4 hours because the `@
 	      </agent>
 	
 	      <!-- run agent every 15 minutes pass the hour -->
-	      <agent name="CCC"
+	      <agent name="CC33"
 	             type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
 	             method="Run"
 	             interval="0001-01-01T00:00:15Z|||00:01:00"> 
@@ -154,7 +154,7 @@ where as the following examples will execute agents every 4 hours because the `@
 	      <!-- run agent on Friday at 2:00 pm local server time where
 	           Everyday=0, Sun=1, Mon=2, Tue=4, Wed=8, Thu=16, Fri=32, Sat=64
 	      -->
-	      <agent name="DDD"
+	      <agent name="DD44"
 	         type="Sitecore.Strategy.Scheduler.Example.LoggerAgent, Sitecore.Strategy.Scheduler.Example"
 	         method="Run"
 	         interval="||0|@14:00:00">

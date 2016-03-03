@@ -59,7 +59,7 @@ namespace Sitecore.Strategy.Scheduler.Model.NullAgent
             get { return false; }
         }
 
-        public string Name
+        public string AgentName
         {
             get { return TypeName; }
             set { /* blank */ }

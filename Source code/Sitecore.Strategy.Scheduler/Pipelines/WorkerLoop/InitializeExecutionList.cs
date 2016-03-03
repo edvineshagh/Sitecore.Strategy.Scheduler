@@ -8,6 +8,9 @@ using Sitecore.Pipelines;
 
 namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 {
+    /// <summary>
+    /// Pipeline initialization sequence before executing agents.
+    /// </summary>
     public class InitializeExecutionList
     {
         public void Process(ISchedulerArgs schedulerArgs)
@@ -23,7 +26,6 @@ namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
             }
             else
             {
-
                 schedulerArgs.ProcessedAgentMediators.Clear();
             }
             

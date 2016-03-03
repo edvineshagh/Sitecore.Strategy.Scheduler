@@ -7,6 +7,10 @@ using Sitecore.Diagnostics;
 
 namespace Sitecore.Strategy.Scheduler.Pipelines.WorkerLoop
 {
+    /// <summary>
+    /// This processor is responsible for saving agent execution times
+    /// into file so that it is available for reload after worker process recycle.
+    /// </summary>
     public class FlushAgentRuntimeToRepository
     {
         public void Process(ISchedulerArgs schedulerArgs)

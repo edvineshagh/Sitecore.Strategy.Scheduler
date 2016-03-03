@@ -74,7 +74,7 @@
     <Compile Include="Model\AgentMediatorBuilder.cs" />
     <Compile Include="Model\IAgentExecutionRecord.cs" />
     <Compile Include="Model\IAgentExecutionRepository.cs" />
-    <Compile Include="Model\IAgentMediators.cs" />
+    <Compile Include="Model\IProcessedAgentMediators.cs" />
     <Compile Include="Model\IAgentMediatorsHeap.cs" />
     <Compile Include="Model\NullAgent\NullAgentMediator.cs" />
     <Compile Include="Model\IAgentMediator.cs" />
