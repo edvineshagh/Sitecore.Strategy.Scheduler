@@ -6,7 +6,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <TimeStampOfAssociatedLegacyPublishXmlFile />
-    <_PublishTargetUrl>Z:\wwwroot\sc8\Website</_PublishTargetUrl>
+    <_PublishTargetUrl>Z:\wwwroot\sc8\website</_PublishTargetUrl>
   </PropertyGroup>
   <ItemGroup>
     <File Include="App_Config/Include/Sitecore.Strategy.Scheduler.config">
@@ -55,10 +55,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>11/06/2015 15:49:36</publishTime>
     </File>
     <File Include="bin/Sitecore.Strategy.Scheduler.dll">
-      <publishTime>03/01/2016 11:14:50</publishTime>
+      <publishTime>03/03/2016 15:07:12</publishTime>
     </File>
     <File Include="bin/Sitecore.Strategy.Scheduler.pdb">
-      <publishTime>03/01/2016 11:14:50</publishTime>
+      <publishTime>03/03/2016 15:07:12</publishTime>
     </File>
     <File Include="bin/Sitecore.Zip.dll">
       <publishTime>11/06/2015 15:49:36</publishTime>
