@@ -212,7 +212,7 @@ where as the following examples will execute agents every 4 hours because the `@
 # <a name="Concerns"></a> 5. Concerns #
 * This extension has not been load/stress tested, nor has it been exercised in production environment.  
 
-* In theory, the extension can perform better because the sleep duration is no longer fixed; rather, the scheduler thread sleeps until the next agent execution is needed  The sleep duration within configuration setting `scheduling/frequency` is still utilized if the next execution duration is less than configured frequency.  
+* In theory, the extension can perform better because the sleep duration is no longer fixed; rather, the scheduler thread sleeps until the next agent execution is needed.  The sleep duration within configuration setting `scheduling/frequency` is still utilized if the next execution duration is less than configured frequency.  
 
 * There is additional processing overhead to be aware of:
 
