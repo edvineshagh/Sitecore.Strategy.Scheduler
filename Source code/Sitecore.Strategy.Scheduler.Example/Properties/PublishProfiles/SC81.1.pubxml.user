@@ -10,7 +10,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   </PropertyGroup>
   <ItemGroup>
     <File Include="App_Config/Include/Sitecore.Strategy.Scheduler.Example.config">
-      <publishTime>03/03/2016 15:14:05</publishTime>
+      <publishTime>03/01/2016 10:48:01</publishTime>
     </File>
     <File Include="bin/ComponentArt.Web.UI.dll">
       <publishTime>11/06/2015 15:49:35</publishTime>
@@ -46,10 +46,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>11/06/2015 15:49:36</publishTime>
     </File>
     <File Include="bin/Sitecore.Strategy.Scheduler.Example.dll">
-      <publishTime>03/03/2016 15:07:12</publishTime>
+      <publishTime>03/01/2016 10:38:04</publishTime>
     </File>
     <File Include="bin/Sitecore.Strategy.Scheduler.Example.pdb">
-      <publishTime>03/03/2016 15:07:12</publishTime>
+      <publishTime>03/01/2016 10:38:04</publishTime>
     </File>
     <File Include="bin/Sitecore.Zip.dll">
       <publishTime>11/06/2015 15:49:36</publishTime>

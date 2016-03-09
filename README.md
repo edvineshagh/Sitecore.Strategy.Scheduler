@@ -210,19 +210,8 @@ where as the following examples will execute agents every 4 hours because the `@
 	}
 
 # <a name="Concerns"></a> 5. Concerns #
-* This extension has not been load/stress tested, nor has it been exercised in production environment.  
+This extension has not been load/stress tested, nor has it been exercised in production environment.  In theory, it should perform better because the sleep duration is no longer fixed; rather, the thread sleeps until the next agent execution is needed.  The sleep duration within configuration setting `scheduling/frequency` is still utilized if the next execution duration is less than configured frequency.  
 
-* In theory, the extension can perform better because the sleep duration is no longer fixed; rather, the scheduler thread sleeps until the next agent execution is needed  The sleep duration within configuration setting `scheduling/frequency` is still utilized if the next execution duration is less than configured frequency.  
+To accommodate variable size sleep duration a [heap](https://en.wikipedia.org/wiki/Heap_(data_structure)) is utilized.  After agents are executed, they are removed and re-added to the heap data structure to preserve the updated execution order; thereby, leading to object creation/destruction overhead.
 
-* There is additional processing overhead to be aware of:
-
-	* Because this extension is extensible via pipelines a degree of overhead is incurred.  As experience has shown, the value of extensible implementation of Sitecore outweighs nominal overhead of pipelines.
-
-	* To accommodate variable size sleep duration, a [heap](https://en.wikipedia.org/wiki/Heap_(data_structure)) is utilized.  After agents are executed, they are removed and re-added to the heap data structure to preserve the updated execution order.  The heap takes Log(n) to add or remove an item to the queue; therefore, maximum of `2 n Log(n)` iterations is needed if **all** agents are being rescheduled.
-	
-	*  After processing scheduled agent, all agent are iterated through in order to flush and preserve last execution time into repository in the event the worker process is recycled.
-	
-	Sitecore 8.1 has approximately 30 agents out-of-box; therefore, the equation `2n Log(n)` shows that there will be 300 additional cycles in comparision to the original scheduler implementation.  Unless `scheduling/frequency` is consitantly greater than sleep duration  between scheduled agents, the extra processing time is gained back when the scheduler thread sleeps longer.
-	
-
-
+Also, this extension is extensible via pipelines, which leads to a degree of overhead; however, the value of extensible implementation should outweigh nominal overhead.
