@@ -17,7 +17,7 @@ to this:
 # <a name="Motivation"></a> 1. Motivation #
 This contribution aims to address existing limitations of Sitecore scheduler, which include:
 
-1. Unable to schedule activities to run at a specific time.  The  recommended workarounds are [not very elegant](https://sdn.sitecore.net/Forum/ShowPost.aspx?PostID=29010 "Publishing site at specific time").  Some of the suggestions include:
+1. Unable to schedule activities to run at a specific time.  The  recommended workarounds are [not very elegant](https://community.sitecore.com/community?id=community_blog&sys_id=d4e223211bc370d0b8954371b24bcb52 "Publishing site at specific time").  Some of the suggestions include:
  
 	1.1. Create an agent with short sleep duration and manage the execution time yourself.
 
